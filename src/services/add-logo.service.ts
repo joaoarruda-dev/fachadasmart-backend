@@ -129,7 +129,7 @@ export async function adicionarLogo(params: AddLogoParams) {
   });
 
   const img = extrairImagemGemini(response);
-  return img ? salvarImagem(img.buffer, "fachada-logo") : null;
+  return img ? salvarImagem(img.buffer, "fachada-logo", img.mimeType) : null;
 }
 
 export { montarPrompt as _montarPromptAddLogo };

@@ -14,6 +14,7 @@ ${JSON.stringify(catalogo, null, 2)}
 REGRAS
 - NÃO calcule preços. Apenas identifique itens e quantidades.
 - Unidade "m2": informe largura_m e altura_m. "ml": informe comprimento_m. "un": informe quantidade.
+- "quantidade" é o número de peças IGUAIS daquele item. Para "m2" e "ml" normalmente é 1; use mais que 1 só quando houver peças repetidas (ex.: 2 painéis de 2 x 1 m). NUNCA coloque a área (m²) ou o comprimento total em "quantidade": o sistema já multiplica largura x altura.
 - Medidas sempre em metros. Converta cm/mm.
 - Inclua itens implícitos tecnicamente necessários (ex.: fonte para LED, estrutura para ACM) e registre isso em "premissas".
 - Se faltar uma medida essencial, NÃO invente: deixe o campo ausente e descreva em "pendencias".

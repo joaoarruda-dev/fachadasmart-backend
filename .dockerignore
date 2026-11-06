@@ -1,0 +1,14 @@
+node_modules
+dist
+uploads
+examples
+postman
+_to_delete
+.env
+.env.*
+!.env.example
+*.log
+.git
+src/**/*.test.ts
+scripts
+postman

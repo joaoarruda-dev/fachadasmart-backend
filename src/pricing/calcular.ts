@@ -15,6 +15,31 @@ function quantidadeBase(item: ItemExtraido, m: MaterialPreco): number | string {
   return q;
 }
 
+/**
+ * Rede de segurança contra o erro mais comum do LLM: repetir a área (m²) ou o
+ * comprimento (ml) no campo "quantidade", o que contaria a medida duas vezes.
+ * Se a quantidade for igual à própria medida, troca por 1 e registra em premissas.
+ */
+export function corrigirQuantidadeDuplicada(extracao: Extracao, tabela: TabelaPrecos): Extracao {
+  const premissas = [...extracao.premissas];
+  const itens = extracao.itens.map((item) => {
+    const m = tabela.materiais.find((x) => x.id === item.materialId);
+    if (!m || item.quantidade <= 1) return item;
+    const medida =
+      m.unidade === "m2" && item.largura_m && item.altura_m
+        ? item.largura_m * item.altura_m
+        : m.unidade === "ml" && item.comprimento_m
+          ? item.comprimento_m
+          : undefined;
+    if (medida === undefined || Math.abs(item.quantidade - medida) > 0.01) return item;
+    premissas.push(
+      `"${item.descricao}": quantidade ${item.quantidade} era a própria medida (${r2(medida)} ${m.unidade}); considerada 1 peça.`
+    );
+    return { ...item, quantidade: 1 };
+  });
+  return { ...extracao, itens, premissas };
+}
+
 /** Cálculo 100% determinístico: mesma entrada, mesmo preço. */
 export function calcularOrcamento(extracao: Extracao, tabela: TabelaPrecos) {
   const pendencias = [...extracao.pendencias];

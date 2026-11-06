@@ -6,6 +6,9 @@ import { config } from "./config/env";
 
 export const app = express();
 
+// Atrás do proxy do Cloud Run: req.ip passa a ser o IP real do cliente
+app.set("trust proxy", true);
+
 // Vazio = libera qualquer origem (dev local). Em produção defina CORS_ORIGIN.
 app.use(cors({ origin: config.CORS_ORIGIN ? config.CORS_ORIGIN.split(",") : true }));
 app.use(express.json({ limit: "2mb" }));

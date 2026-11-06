@@ -1,7 +1,7 @@
 import { buildPromptExtracao } from "../ai/promptExtracao";
 import { openai } from "../config/openai";
 import { config } from "../config/env";
-import { calcularOrcamento } from "../pricing/calcular";
+import { calcularOrcamento, corrigirQuantidadeDuplicada } from "../pricing/calcular";
 import { Extracao, ItemExtraido, TabelaPrecos } from "../pricing/types";
 import tabelaPadrao from "../pricing/tabela-padrao.json";
 
@@ -39,7 +39,7 @@ export async function gerarOrcamento(form: unknown, tabela: TabelaPrecos = tabel
   const content = completion.choices[0]?.message?.content;
   if (!content) throw new Error("Resposta vazia do modelo");
 
-  const extracao = normalizarExtracao(JSON.parse(content));
+  const extracao = corrigirQuantidadeDuplicada(normalizarExtracao(JSON.parse(content)), tabela);
   return calcularOrcamento(extracao, tabela);
 }
 

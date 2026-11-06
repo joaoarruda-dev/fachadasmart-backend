@@ -3,6 +3,10 @@ import { limparImagem } from "../services/clear-image.service";
 import { adicionarLogo } from "../services/add-logo.service";
 import { gerarOrcamento } from "../services/orcamento.service";
 import { TIPOS_ACEITOS as TIPOS_IMAGEM } from "../utils/fileUpload";
+import { orcamentoPorItens } from "../pricing/itens";
+import { ErroValidacao } from "../utils/errors";
+import { TabelaPrecos } from "../pricing/types";
+import tabelaPadrao from "../pricing/tabela-padrao.json";
 
 type Files = Record<string, Express.Multer.File[]> | undefined;
 
@@ -16,8 +20,6 @@ function parseJsonCampo<T>(valor: unknown, nome: string): T | undefined {
   }
 }
 
-class ErroValidacao extends Error {}
-
 function responderErro(res: Response, err: unknown, msg: string) {
   if (err instanceof ErroValidacao) return res.status(400).json({ error: err.message });
   console.error(msg, err);
@@ -26,10 +28,15 @@ function responderErro(res: Response, err: unknown, msg: string) {
 
 export async function orcamentoFachada(req: Request, res: Response) {
   try {
-    const { form, tabelaPrecos } = req.body ?? {};
-    if (!form) return res.status(400).json({ error: 'Envie "form" no corpo da requisição' });
-    const resultado = await gerarOrcamento(form, tabelaPrecos);
-    return res.json(resultado);
+    const { form, itens, tabelaPrecos } = req.body ?? {};
+    const tabela: TabelaPrecos = tabelaPrecos ?? (tabelaPadrao as TabelaPrecos);
+
+    // Itens prontos (formulário): cálculo direto, sem IA.
+    if (itens !== undefined) return res.json(orcamentoPorItens(itens, tabela));
+
+    // Texto livre: a IA extrai os itens antes do cálculo.
+    if (!form) return res.status(400).json({ error: 'Envie "itens" (formulário) ou "form" (texto livre)' });
+    return res.json(await gerarOrcamento(form, tabela));
   } catch (err) {
     return responderErro(res, err, "Erro ao gerar orçamento");
   }
@@ -44,6 +51,7 @@ export async function limparImagemFachada(req: Request, res: Response) {
     const saved = await limparImagem(imageFile.buffer, imageFile.mimetype);
     if (!saved) return res.status(502).json({ error: "O modelo não retornou imagem. Tente novamente." });
 
+    res.locals.imageUrl = saved.url; // registrado na geração pelo middleware de cota
     return res.json({ success: true, imageUrl: saved.url, message: "Imagem limpa com sucesso" });
   } catch (err) {
     return responderErro(res, err, "Erro ao limpar imagem");
@@ -90,6 +98,7 @@ export async function adicionarLogoFachada(req: Request, res: Response) {
 
     if (!saved) return res.status(502).json({ error: "O modelo não retornou imagem. Tente novamente." });
 
+    res.locals.imageUrl = saved.url; // registrado na geração pelo middleware de cota
     return res.json({ success: true, imageUrl: saved.url, message: "Logo adicionado à fachada com sucesso" });
   } catch (err) {
     return responderErro(res, err, "Erro ao adicionar logo à fachada");

@@ -23,5 +23,5 @@ export async function limparImagem(imageBuffer: Buffer, mimeType = "image/png") 
   });
 
   const img = extrairImagemGemini(response);
-  return img ? salvarImagem(img.buffer, "cleaned") : null;
+  return img ? salvarImagem(img.buffer, "limpeza", img.mimeType) : null;
 }
