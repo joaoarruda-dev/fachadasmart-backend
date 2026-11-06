@@ -1,0 +1,16 @@
+{
+  "_aviso": "VALORES DE EXEMPLO. Substitua pela tabela real de cada empresa.",
+  "margemPercentual": 40,
+  "impostoPercentual": 6,
+  "taxaInstalacao": 250,
+  "valorMinimo": 400,
+  "materiais": [
+    { "id": "acm",              "nome": "Revestimento em ACM",            "unidade": "m2", "custoUnitario": 180, "maoDeObraPorUnidade": 90, "perdaPercentual": 15 },
+    { "id": "lona-impressa",    "nome": "Lona impressa",                  "unidade": "m2", "custoUnitario": 35,  "maoDeObraPorUnidade": 20, "perdaPercentual": 5 },
+    { "id": "adesivo-vinil",    "nome": "Adesivo vinil",                  "unidade": "m2", "custoUnitario": 45,  "maoDeObraPorUnidade": 30, "perdaPercentual": 10 },
+    { "id": "estrutura-metalica","nome": "Estrutura metálica",            "unidade": "m2", "custoUnitario": 120, "maoDeObraPorUnidade": 60, "perdaPercentual": 5 },
+    { "id": "letra-caixa",      "nome": "Letra caixa (por letra)",        "unidade": "un", "custoUnitario": 60,  "maoDeObraPorUnidade": 25 },
+    { "id": "fita-led",         "nome": "Fita/perfil de LED",             "unidade": "ml", "custoUnitario": 25,  "maoDeObraPorUnidade": 10, "perdaPercentual": 5 },
+    { "id": "fonte-led",        "nome": "Fonte de alimentação LED",       "unidade": "un", "custoUnitario": 90,  "maoDeObraPorUnidade": 20 }
+  ]
+}
