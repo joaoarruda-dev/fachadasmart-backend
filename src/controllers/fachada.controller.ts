@@ -3,7 +3,7 @@ import { limparImagem } from "../services/clear-image.service";
 import { adicionarLogo } from "../services/add-logo.service";
 import { gerarOrcamento } from "../services/orcamento.service";
 import { TIPOS_ACEITOS as TIPOS_IMAGEM } from "../utils/fileUpload";
-import { orcamentoPorItens } from "../pricing/itens";
+import { orcamentoPorItens, validarTabela } from "../pricing/itens";
 import { ErroValidacao } from "../utils/errors";
 import { TabelaPrecos } from "../pricing/types";
 import tabelaPadrao from "../pricing/tabela-padrao.json";
@@ -29,7 +29,7 @@ function responderErro(res: Response, err: unknown, msg: string) {
 export async function orcamentoFachada(req: Request, res: Response) {
   try {
     const { form, itens, tabelaPrecos } = req.body ?? {};
-    const tabela: TabelaPrecos = tabelaPrecos ?? (tabelaPadrao as TabelaPrecos);
+    const tabela: TabelaPrecos = tabelaPrecos === undefined ? (tabelaPadrao as TabelaPrecos) : validarTabela(tabelaPrecos);
 
     // Itens prontos (formulário): cálculo direto, sem IA.
     if (itens !== undefined) return res.json(orcamentoPorItens(itens, tabela));

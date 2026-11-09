@@ -1,5 +1,6 @@
 -- Fachada Smart — acesso, liberação manual e cota mensal
 -- Rodar uma vez no Supabase: SQL Editor → New query → colar → Run.
+-- Instalação nova: só este arquivo basta (já inclui o 002). O 002 é só para quem rodou a versão antiga do 001.
 
 -- 1. Uma linha por empresa. Nasce "pending": só usa depois que o João libera.
 create table if not exists public.profiles (
@@ -20,6 +21,7 @@ create table if not exists public.generations (
   user_id uuid not null references public.profiles(id) on delete cascade,
   kind text not null check (kind in ('previa', 'limpeza')),
   status text not null default 'reserved' check (status in ('reserved', 'done', 'failed')),
+  image_url text,  -- URL da imagem gerada (R2), preenchida quando status = 'done'
   created_at timestamptz not null default now()
 );
 create index if not exists generations_user_month on public.generations (user_id, created_at);
@@ -78,17 +80,20 @@ begin
   return jsonb_build_object('ok', true, 'id', v_id, 'used', v_used + 1, 'quota', v_quota);
 end $$;
 
--- 7. Fecha a reserva: 'done' consome a cota, 'failed' devolve.
-create or replace function public.finish_generation(p_id bigint, p_status text)
+-- 7. Fecha a reserva: 'done' consome a cota e guarda a URL da imagem, 'failed' devolve.
+create or replace function public.finish_generation(p_id bigint, p_status text, p_image_url text default null)
 returns void
 language sql security definer set search_path = public as $$
-  update public.generations set status = p_status where id = p_id and status = 'reserved';
+  update public.generations
+     set status = p_status,
+         image_url = coalesce(p_image_url, image_url)
+   where id = p_id and status = 'reserved';
 $$;
 
 -- 8. Funções só para o backend.
 revoke all on function public.usage_this_month(uuid) from public, anon, authenticated;
 revoke all on function public.reserve_generation(uuid, text) from public, anon, authenticated;
-revoke all on function public.finish_generation(bigint, text) from public, anon, authenticated;
+revoke all on function public.finish_generation(bigint, text, text) from public, anon, authenticated;
 grant execute on function public.usage_this_month(uuid) to service_role;
 grant execute on function public.reserve_generation(uuid, text) to service_role;
-grant execute on function public.finish_generation(bigint, text) to service_role;
+grant execute on function public.finish_generation(bigint, text, text) to service_role;

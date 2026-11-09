@@ -14,6 +14,7 @@ const perfis: Record<string, Perfil> = {
   ativo: { status: "active", quota_previas: 2, quota_limpezas: 2 },
   pendente: { status: "pending", quota_previas: 50, quota_limpezas: 50 },
 };
+const upserts: any[] = [];
 let geracoes: { id: number; user: string; kind: string; status: string; image_url?: string | null }[] = [];
 
 let supabaseFake: http.Server;
@@ -51,6 +52,18 @@ before(async () => {
       geracoes.push({ id, user: body.p_user, kind: body.p_kind, status: "reserved" });
       return json(200, { ok: true, id, used: used + 1, quota });
     }
+    if (req.url?.startsWith("/rest/v1/profiles") && req.method === "POST") {
+      upserts.push(body);
+      if (!perfis[body.id]) perfis[body.id] = { status: "pending", quota_previas: 50, quota_limpezas: 50 };
+      res.writeHead(201);
+      return res.end();
+    }
+    if (req.url?.startsWith("/rest/v1/profiles") && req.method === "GET") {
+      const id = decodeURIComponent(req.url.match(/id=eq\.([^&]+)/)?.[1] ?? "");
+      const p = perfis[id];
+      return json(200, p ? [{ email: `${id}@teste.com`, company: null, ...p }] : []);
+    }
+    if (req.url?.startsWith("/rest/v1/rpc/usage_this_month")) return json(200, []);
     if (req.url?.startsWith("/rest/v1/rpc/finish_generation")) {
       const g = geracoes.find((x) => x.id === body.p_id && x.status === "reserved");
       if (g) {
@@ -80,6 +93,7 @@ before(async () => {
   // Rota de teste: passa por login + cota e conclui com uma URL, sem chamar a IA
   const { exigirLogin } = await import("./auth");
   const { consumirCota } = await import("./cota");
+  app.get("/teste/ip", (req, res) => res.json({ ip: req.ip }));
   app.post("/teste/gerar", exigirLogin, consumirCota("previa"), (_req, res) => {
     res.locals.imageUrl = "https://previas.fachadasmart.com/fachada-logo/teste.jpg";
     res.json({ ok: true });
@@ -160,4 +174,18 @@ test("geração concluída consome a cota e guarda a URL da imagem", async () =>
   assert.equal(geracoes.length, 1);
   assert.equal(geracoes[0].status, "done");
   assert.equal(geracoes[0].image_url, "https://previas.fachadasmart.com/fachada-logo/teste.jpg");
+});
+
+test("/me cria o perfil que não existe e responde pendente", async () => {
+  const r = await fetch(`${apiUrl}/me`, { headers: { Authorization: `Bearer ${await assinar("novo")}` } });
+  assert.equal(r.status, 200);
+  const conta = await r.json();
+  assert.equal(conta.status, "pending");
+  assert.equal(conta.previas.quota, 50);
+  assert.equal(upserts.at(-1).id, "novo");
+});
+
+test("IP do cliente vem do salto do Google, não do X-Forwarded-For forjado", async () => {
+  const r = await fetch(apiUrl.replace(/\/api$/, "/teste/ip"), { headers: { "X-Forwarded-For": "1.2.3.4, 9.9.9.9" } });
+  assert.equal((await r.json()).ip, "9.9.9.9");
 });

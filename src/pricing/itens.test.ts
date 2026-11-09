@@ -44,3 +44,25 @@ test("entradas inválidas viram ErroValidacao (400)", () => {
     assert.throws(() => validarItens(entrada, tabela), (e: unknown) => e instanceof ErroValidacao && msg.test(e.message));
   }
 });
+
+test("tabelaPrecos válida é aceita; inválida vira ErroValidacao (400)", async () => {
+  const { validarTabela } = await import("./itens");
+  const ok = validarTabela(tabela);
+  assert.equal(ok.materiais.length, tabela.materiais.length);
+
+  const base = { margemPercentual: 40, impostoPercentual: 6, taxaInstalacao: 250, valorMinimo: 400 };
+  const mat = { id: "acm", nome: "ACM", unidade: "m2", custoUnitario: 180, maoDeObraPorUnidade: 90 };
+  const casos: [unknown, RegExp][] = [
+    [{}, /materiais/],
+    ["texto", /objeto/],
+    [{ ...base, materiais: [] }, /materiais/],
+    [{ ...base, materiais: [{ ...mat, unidade: "kg" }] }, /unidade inválida/],
+    [{ ...base, materiais: [mat, mat] }, /repetido/],
+    [{ ...base, materiais: [{ ...mat, custoUnitario: -1 }] }, /custoUnitario/],
+    [{ ...base, impostoPercentual: 100, materiais: [mat] }, /impostoPercentual/],
+    [{ ...base, margemPercentual: "40", materiais: [mat] }, /margemPercentual/],
+  ];
+  for (const [entrada, msg] of casos) {
+    assert.throws(() => validarTabela(entrada), (e: unknown) => e instanceof ErroValidacao && msg.test(e.message));
+  }
+});

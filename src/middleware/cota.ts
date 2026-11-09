@@ -58,6 +58,12 @@ export function consumirCota(tipo: TipoGeracao) {
 export async function minhaConta(req: Request, res: Response) {
   if (!supabaseAdmin || !req.usuario) return res.status(503).json({ error: "Autenticação não configurada" });
 
+  // Conta criada antes do gatilho do banco existir: cria o perfil (pendente) para poder ser liberada
+  const { error: e0 } = await supabaseAdmin
+    .from("profiles")
+    .upsert({ id: req.usuario.id, email: req.usuario.email ?? "" }, { onConflict: "id", ignoreDuplicates: true });
+  if (e0) console.error("me/upsert", e0);
+
   const [{ data: perfil, error: e1 }, { data: uso, error: e2 }] = await Promise.all([
     supabaseAdmin.from("profiles").select("email, company, status, quota_previas, quota_limpezas").eq("id", req.usuario.id).maybeSingle(),
     supabaseAdmin.rpc("usage_this_month", { p_user: req.usuario.id }),

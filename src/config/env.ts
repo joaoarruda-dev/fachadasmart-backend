@@ -6,6 +6,8 @@ export const config = {
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || "",
   OPENAI_MODEL: process.env.OPENAI_MODEL || "gpt-5.6-sol",
   CORS_ORIGIN: process.env.CORS_ORIGIN || "",
+  // Segredo compartilhado com o proxy api.fachadasmart.com (Cloudflare Worker). Vazio = sem proxy.
+  PROXY_SECRET: process.env.PROXY_SECRET || "",
   PORT: process.env.PORT || 8080,
   // Supabase: valida o login e controla liberação/cota. A service role key é SECRETA (só backend).
   SUPABASE_URL: process.env.SUPABASE_URL || "",

@@ -12,3 +12,4 @@ _to_delete
 src/**/*.test.ts
 scripts
 postman
+.github

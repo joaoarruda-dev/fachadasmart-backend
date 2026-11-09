@@ -1,5 +1,6 @@
 -- Fachada Smart — guarda a URL da imagem gerada em cada geração concluída.
--- Rodar uma vez no Supabase: SQL Editor → New query → colar → Run (depois do 001).
+-- Só para bancos criados com a versão antiga do 001 (sem image_url). Instalação nova: o 001 atual já inclui isto.
+-- Rodar uma vez no Supabase: SQL Editor → New query → colar → Run.
 
 alter table public.generations add column if not exists image_url text;
 

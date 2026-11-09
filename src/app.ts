@@ -6,8 +6,9 @@ import { config } from "./config/env";
 
 export const app = express();
 
-// Atrás do proxy do Cloud Run: req.ip passa a ser o IP real do cliente
-app.set("trust proxy", true);
+// Cloud Run: confia só no salto do Google (o último IP do X-Forwarded-For).
+// "true" confiaria no cabeçalho inteiro, que o cliente pode forjar para escapar do limite por IP.
+app.set("trust proxy", 1);
 
 // Vazio = libera qualquer origem (dev local). Em produção defina CORS_ORIGIN.
 app.use(cors({ origin: config.CORS_ORIGIN ? config.CORS_ORIGIN.split(",") : true }));
